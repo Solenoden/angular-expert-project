@@ -1,20 +1,26 @@
-import {Injectable, Signal, signal} from '@angular/core';
+import {effect, Injectable, Signal, signal} from '@angular/core';
 import {Observable} from 'rxjs';
 
 import {HttpClient} from '@angular/common/http';
 import {CurrentConditions} from './current-conditions/current-conditions.type';
 import {ConditionsAndZip} from './conditions-and-zip.type';
 import {Forecast} from './forecasts-list/forecast.type';
+import {LocationService} from './location.service';
 
 @Injectable()
 export class WeatherService {
-
   static URL = 'http://api.openweathermap.org/data/2.5';
   static APPID = '5a4b2d457ecbef9eb2a71e480b947604';
   static ICON_URL = 'https://raw.githubusercontent.com/udacity/Sunshine-Version-2/sunshine_master/app/src/main/res/drawable-hdpi/';
+
   private currentConditions = signal<ConditionsAndZip[]>([]);
 
-  constructor(private http: HttpClient) { }
+  constructor(
+      private http: HttpClient,
+      private locationService: LocationService
+  ) {
+    this.syncLocations();
+  }
 
   addCurrentConditions(zipcode: string): void {
     // Here we make a request to get the current conditions data from the API. Note the use of backticks and an expression to insert the zipcode
@@ -59,4 +65,15 @@ export class WeatherService {
       return WeatherService.ICON_URL + "art_clear.png";
   }
 
+  private syncLocations(): void {
+    effect(() => {
+      const locationsAdded = this.locationService.locationsAdded();
+      locationsAdded?.forEach(zipcode => this.addCurrentConditions(zipcode));
+    });
+
+    effect(() => {
+      const locationsRemoved = this.locationService.locationsRemoved();
+      locationsRemoved?.forEach(zipcode => this.removeCurrentConditions(zipcode));
+    });
+  }
 }
