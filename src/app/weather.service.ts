@@ -1,11 +1,15 @@
 import {effect, Injectable, Signal, signal} from '@angular/core';
-import {Observable} from 'rxjs';
+import {from, Observable} from 'rxjs';
 
 import {HttpClient} from '@angular/common/http';
 import {CurrentConditions} from './current-conditions/current-conditions.type';
 import {ConditionsAndZip} from './conditions-and-zip.type';
 import {Forecast} from './forecasts-list/forecast.type';
 import {LocationService} from './location.service';
+import {CacheStore} from './cache-store';
+import {tap} from 'rxjs/operators';
+
+const CACHE_PREFIX = 'WEATHER_SERVICE';
 
 @Injectable()
 export class WeatherService {
@@ -15,6 +19,9 @@ export class WeatherService {
 
   private currentConditions = signal<ConditionsAndZip[]>([]);
 
+  private currentConditionsCacheStore = new CacheStore<CurrentConditions>(CACHE_PREFIX + '_CONDITIONS');
+  private forecastCacheStore = new CacheStore<Forecast>(CACHE_PREFIX + '_FORECASTS');
+
   constructor(
       private http: HttpClient,
       private locationService: LocationService
@@ -23,9 +30,15 @@ export class WeatherService {
   }
 
   private addCurrentConditions(zipcode: string): void {
-    // Here we make a request to get the current conditions data from the API. Note the use of backticks and an expression to insert the zipcode
-    this.http.get<CurrentConditions>(`${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`)
-      .subscribe(data => this.currentConditions.update(conditions => [...conditions, {zip: zipcode, data}]));
+    const cachedConditions = this.currentConditionsCacheStore.get(zipcode);
+
+    const conditionsUrl = `${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`;
+    const conditions$ = cachedConditions ? from([cachedConditions]) : this.http.get<CurrentConditions>(conditionsUrl);
+
+    conditions$.subscribe(data => {
+      if (!cachedConditions) this.currentConditionsCacheStore.set(zipcode, data);
+      this.currentConditions.update(conditions => [...conditions, { zip: zipcode, data }]);
+    });
   }
 
   private removeCurrentConditions(zipcode: string) {
@@ -39,8 +52,14 @@ export class WeatherService {
   }
 
   public getForecast(zipcode: string): Observable<Forecast> {
-    // Here we make a request to get the forecast data from the API. Note the use of backticks and an expression to insert the zipcode
-    return this.http.get<Forecast>(`${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`);
+    const cachedForecast = this.forecastCacheStore.get(zipcode);
+
+    const forecastUrl = `${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`;
+    const forecast$ = cachedForecast ? from([cachedForecast]) : this.http.get<Forecast>(forecastUrl);
+
+    return forecast$.pipe(tap(forecast => {
+      if (!cachedForecast) this.forecastCacheStore.set(zipcode, forecast);
+    }));
   }
 
   public getWeatherIcon(id): string {

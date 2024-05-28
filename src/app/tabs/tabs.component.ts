@@ -64,6 +64,7 @@ export class TabsComponent implements AfterContentInit, OnDestroy {
     if (this.activeTabId() === tabId) {
       const activeTabIndex = this.tabsToDisplay().findIndex(x => x.tabId === tabId);
       const newActiveTabIndex = activeTabIndex === 0 ? activeTabIndex : activeTabIndex - 1;
+      // TODO: Fix viewing of only tab when: there are two tabs left and the current tab is closed
       this.viewTab(this.tabsToDisplay()[newActiveTabIndex]?.tabId);
     }
 
