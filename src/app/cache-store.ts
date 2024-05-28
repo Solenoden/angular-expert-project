@@ -7,7 +7,8 @@ export class CacheStore<DataType = any> {
     private readonly inMemoryCache: Cache<DataType> = {};
 
     constructor(
-        private cachePrefix: string
+        private cacheKeyPrefix: string,
+        private cacheDurationSeconds: number
     ) {}
 
     public get<OverrideDataType extends DataType>(key: string): OverrideDataType {
@@ -20,6 +21,11 @@ export class CacheStore<DataType = any> {
                cacheRecord = JSON.parse(browserCacheRecord);
                this.inMemoryCache[cacheKey] = cacheRecord;
            }
+        }
+
+        if (cacheRecord && this.checkIsExpired(cacheRecord)) {
+            this.delete(key);
+            cacheRecord = null;
         }
 
         return cacheRecord?.data as OverrideDataType;
@@ -41,7 +47,12 @@ export class CacheStore<DataType = any> {
         delete this.inMemoryCache[cacheKey];
     }
 
+    private checkIsExpired(cacheRecord: CacheRecord<DataType>): boolean {
+        const secondsSinceCreation = Math.floor((Date.now() - cacheRecord.createdAtEpoch) / 1000);
+        return secondsSinceCreation >= this.cacheDurationSeconds;
+    }
+
     private getCacheKey(key: string): string {
-        return (this.cachePrefix + '_' + key).toUpperCase();
+        return (this.cacheKeyPrefix + '_' + key).toUpperCase();
     }
 }

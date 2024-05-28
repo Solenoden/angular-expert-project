@@ -9,8 +9,6 @@ import {LocationService} from './location.service';
 import {CacheStore} from './cache-store';
 import {tap} from 'rxjs/operators';
 
-const CACHE_PREFIX = 'WEATHER_SERVICE';
-
 @Injectable()
 export class WeatherService {
   static URL = 'http://api.openweathermap.org/data/2.5';
@@ -19,8 +17,8 @@ export class WeatherService {
 
   private currentConditions = signal<ConditionsAndZip[]>([]);
 
-  private currentConditionsCacheStore = new CacheStore<CurrentConditions>(CACHE_PREFIX + '_CONDITIONS');
-  private forecastCacheStore = new CacheStore<Forecast>(CACHE_PREFIX + '_FORECASTS');
+  private currentConditionsCacheStore = new CacheStore<CurrentConditions>('CONDITIONS', 30);
+  private forecastCacheStore = new CacheStore<Forecast>('FORECASTS', 30);
 
   constructor(
       private http: HttpClient,
