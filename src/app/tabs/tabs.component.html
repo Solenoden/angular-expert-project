@@ -1,0 +1,11 @@
+<div class="column">
+    <div class="row">
+        <div *ngFor="let tab of tabsToDisplay();" class="tab-header row" (click)="viewTab(tab.tabId)">
+            <h6>{{ tab.tabTitle }}</h6>
+            <span class="close-tab-icon" (click)="removeTab(tab.tabId)">&times;</span>
+        </div>
+    </div>
+    <div id="tab-body">
+        <ng-container *ngTemplateOutlet="activeTabTemplate()"></ng-container>
+    </div>
+</div>

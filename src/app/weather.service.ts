@@ -19,36 +19,31 @@ export class WeatherService {
       private http: HttpClient,
       private locationService: LocationService
   ) {
-    this.syncLocations();
+    this.autoRetrieveLocationConditions();
   }
 
-  addCurrentConditions(zipcode: string): void {
+  private addCurrentConditions(zipcode: string): void {
     // Here we make a request to get the current conditions data from the API. Note the use of backticks and an expression to insert the zipcode
     this.http.get<CurrentConditions>(`${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`)
       .subscribe(data => this.currentConditions.update(conditions => [...conditions, {zip: zipcode, data}]));
   }
 
-  removeCurrentConditions(zipcode: string) {
+  private removeCurrentConditions(zipcode: string) {
     this.currentConditions.update(conditions => {
-      for (let i in conditions) {
-        if (conditions[i].zip == zipcode)
-          conditions.splice(+i, 1);
-      }
-      return conditions;
+      return [...conditions].filter(x => x.zip !== zipcode);
     })
   }
 
-  getCurrentConditions(): Signal<ConditionsAndZip[]> {
+  public getCurrentConditions(): Signal<ConditionsAndZip[]> {
     return this.currentConditions.asReadonly();
   }
 
-  getForecast(zipcode: string): Observable<Forecast> {
+  public getForecast(zipcode: string): Observable<Forecast> {
     // Here we make a request to get the forecast data from the API. Note the use of backticks and an expression to insert the zipcode
     return this.http.get<Forecast>(`${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`);
-
   }
 
-  getWeatherIcon(id): string {
+  public getWeatherIcon(id): string {
     if (id >= 200 && id <= 232)
       return WeatherService.ICON_URL + "art_storm.png";
     else if (id >= 501 && id <= 511)
@@ -65,15 +60,16 @@ export class WeatherService {
       return WeatherService.ICON_URL + "art_clear.png";
   }
 
-  private syncLocations(): void {
+  // TODO: Possibly move to appropriate high up component to decouple LocationService from WeatherService
+  private autoRetrieveLocationConditions(): void {
     effect(() => {
       const locationsAdded = this.locationService.locationsAdded();
       locationsAdded?.forEach(zipcode => this.addCurrentConditions(zipcode));
-    });
+    }, { allowSignalWrites: true });
 
     effect(() => {
       const locationsRemoved = this.locationService.locationsRemoved();
       locationsRemoved?.forEach(zipcode => this.removeCurrentConditions(zipcode));
-    });
+    }, { allowSignalWrites: true });
   }
 }

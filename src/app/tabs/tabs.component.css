@@ -1,0 +1,27 @@
+.tab-header {
+    background-color: #617aa0;
+    border: 1px solid black;
+    border-bottom: none;
+    color: white;
+    padding: 4px 8px;
+    margin-right: 8px !important;
+    cursor: pointer;
+}
+
+.tab-header:hover {
+    opacity: 0.8;
+}
+
+.close-tab-icon {
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+    margin-left: 8px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+#tab-body {
+    border: 1px solid black;
+    padding: 24px 32px 24px 16px;
+}

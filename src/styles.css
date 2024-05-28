@@ -2,3 +2,15 @@
 body {
   padding: 10px;
 }
+
+.row {
+  margin: 0 !important;
+  display: flex;
+  flex-direction: row;
+}
+
+.column {
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+}

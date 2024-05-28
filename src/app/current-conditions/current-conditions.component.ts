@@ -3,6 +3,7 @@ import {WeatherService} from "../weather.service";
 import {LocationService} from "../location.service";
 import {Router} from "@angular/router";
 import {ConditionsAndZip} from '../conditions-and-zip.type';
+import {TabId} from '../app-tab.directive';
 
 @Component({
   selector: 'app-current-conditions',
@@ -10,13 +11,16 @@ import {ConditionsAndZip} from '../conditions-and-zip.type';
   styleUrls: ['./current-conditions.component.css']
 })
 export class CurrentConditionsComponent {
-
-  public weatherService = inject(WeatherService);
   private router = inject(Router);
+  protected weatherService = inject(WeatherService);
   protected locationService = inject(LocationService);
   protected currentConditionsByZip: Signal<ConditionsAndZip[]> = this.weatherService.getCurrentConditions();
 
   showForecast(zipcode : string){
     this.router.navigate(['/forecast', zipcode])
+  }
+
+  protected removeLocation(zipcode: TabId) {
+    this.locationService.removeLocation(zipcode as string);
   }
 }

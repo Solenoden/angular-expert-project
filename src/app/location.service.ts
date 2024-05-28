@@ -21,8 +21,8 @@ export class LocationService {
     const zipcodesToAdd = zipcodes.filter(zipcode => !this._locations().includes(zipcode));
     if (zipcodesToAdd.length === 0) return;
 
-    this._locations.update((locations) => [...locations, ...zipcodes]);
-    this._locationsAdded.set(zipcodes);
+    this._locations.update((locations) => [...locations, ...zipcodesToAdd]);
+    this._locationsAdded.set(zipcodesToAdd);
   }
 
   public addLocation(zipcode : string) {
@@ -30,17 +30,16 @@ export class LocationService {
   }
 
   public removeLocation(zipcode : string) {
-    let index = this.locations().indexOf(zipcode);
-    if (index !== -1) {
-      this._locations.update((locations) => [...locations].splice(index, 1));
-      this._locationsRemoved.set([zipcode]);
-    }
+    if (!this._locations().includes(zipcode)) return;
+
+    this._locations.update((locations) => [...locations].filter(x => x !== zipcode));
+    this._locationsRemoved.set([zipcode]);
   }
 
   private syncCache(): void {
     let locString = localStorage.getItem(LOCATIONS);
     if (locString) this.addLocations(JSON.parse(locString));
 
-    effect(() => localStorage.setItem(LOCATIONS, JSON.stringify(this.locations())))
+    effect(() => localStorage.setItem(LOCATIONS, JSON.stringify(this._locations())))
   }
 }
