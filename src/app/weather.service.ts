@@ -1,13 +1,11 @@
 import {effect, Injectable, Signal, signal} from '@angular/core';
-import {from, Observable} from 'rxjs';
-
+import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {CurrentConditions} from './current-conditions/current-conditions.type';
 import {ConditionsAndZip} from './conditions-and-zip.type';
 import {Forecast} from './forecasts-list/forecast.type';
 import {LocationService} from './location.service';
 import {CacheStore} from './cache-store';
-import {tap} from 'rxjs/operators';
 
 @Injectable()
 export class WeatherService {
@@ -28,14 +26,11 @@ export class WeatherService {
   }
 
   private addCurrentConditions(zipcode: string): void {
-    const cachedConditions = this.currentConditionsCacheStore.get(zipcode);
-
-    const conditionsUrl = `${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`;
-    const conditions$ = cachedConditions ? from([cachedConditions]) : this.http.get<CurrentConditions>(conditionsUrl);
-
-    conditions$.subscribe(data => {
-      if (!cachedConditions) this.currentConditionsCacheStore.set(zipcode, data);
-      this.currentConditions.update(conditions => [...conditions, { zip: zipcode, data }]);
+    this.currentConditionsCacheStore.getOrProvide(
+        zipcode,
+        this.http.get<CurrentConditions>(`${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`)
+    ).subscribe(currentConditions => {
+      this.currentConditions.update(conditions => [...conditions, { zip: zipcode, data: currentConditions }]);
     });
   }
 
@@ -50,17 +45,13 @@ export class WeatherService {
   }
 
   public getForecast(zipcode: string): Observable<Forecast> {
-    const cachedForecast = this.forecastCacheStore.get(zipcode);
-
-    const forecastUrl = `${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`;
-    const forecast$ = cachedForecast ? from([cachedForecast]) : this.http.get<Forecast>(forecastUrl);
-
-    return forecast$.pipe(tap(forecast => {
-      if (!cachedForecast) this.forecastCacheStore.set(zipcode, forecast);
-    }));
+    return this.forecastCacheStore.getOrProvide(
+        zipcode,
+        this.http.get<Forecast>(`${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`)
+    );
   }
 
-  public getWeatherIcon(id): string {
+  public getWeatherIcon(id: number): string {
     if (id >= 200 && id <= 232)
       return WeatherService.ICON_URL + "art_storm.png";
     else if (id >= 501 && id <= 511)

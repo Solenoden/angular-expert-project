@@ -1,7 +1,9 @@
-export type Cache<DataType> = { [key: string]: CacheRecord<DataType> };
-type CacheRecord<DataType> = { data: DataType, createdAtEpoch: number }
+import {from, Observable} from 'rxjs';
+import {tap} from 'rxjs/operators';
 
-// TODO: Possibly provide a helper function (getOrSetCache) that takes the key and a function to populate the key if the data is not already cached. returns the cached value if available otherwise calls populateFunction
+type CacheRecord<DataType> = { data: DataType, createdAtEpoch: number };
+export type Cache<DataType> = { [key: string]: CacheRecord<DataType> };
+
 // TODO: Possibly provide through dependency injection
 export class CacheStore<DataType = any> {
     private readonly inMemoryCache: Cache<DataType> = {};
@@ -13,22 +15,27 @@ export class CacheStore<DataType = any> {
 
     public get<OverrideDataType extends DataType>(key: string): OverrideDataType {
         const cacheKey = this.getCacheKey(key);
-        let cacheRecord = this.inMemoryCache[cacheKey];
+        const { cacheRecord, isFromMemory } = this.getCacheRecord<OverrideDataType>(cacheKey);
 
-        if (!cacheRecord) {
-           const browserCacheRecord = localStorage.getItem(cacheKey);
-           if (browserCacheRecord) {
-               cacheRecord = JSON.parse(browserCacheRecord);
-               this.inMemoryCache[cacheKey] = cacheRecord;
-           }
-        }
-
-        if (cacheRecord && this.checkIsExpired(cacheRecord)) {
+        if (!cacheRecord) return null;
+        if (this.checkIsExpired(cacheRecord)) {
             this.delete(key);
-            cacheRecord = null;
+            return null;
         }
 
-        return cacheRecord?.data as OverrideDataType;
+        if (!isFromMemory) this.inMemoryCache[cacheKey] = cacheRecord;
+
+        return cacheRecord?.data;
+    }
+
+    public getOrProvide<OverrideDataType extends DataType>(
+        key: string,
+        providerObservable: Observable<OverrideDataType>
+    ): Observable<OverrideDataType> {
+        const cachedData = this.get<OverrideDataType>(key);
+        if (cachedData) return from([cachedData]);
+
+        return providerObservable.pipe(tap(data => this.set(key, data)));
     }
 
     public set(key: string, data: DataType): void {
@@ -45,6 +52,15 @@ export class CacheStore<DataType = any> {
 
         localStorage.removeItem(cacheKey);
         delete this.inMemoryCache[cacheKey];
+    }
+
+    private getCacheRecord<OverrideDataType extends DataType>(cacheKey: string): { cacheRecord: CacheRecord<OverrideDataType>, isFromMemory: boolean } {
+        const memoryCacheRecord = this.inMemoryCache[cacheKey] as CacheRecord<OverrideDataType>;
+        if (memoryCacheRecord) return { cacheRecord: memoryCacheRecord, isFromMemory: true };
+
+        const browserCacheString = localStorage.getItem(cacheKey);
+        const browserCacheRecord = browserCacheString ? JSON.parse(browserCacheString) as CacheRecord<OverrideDataType> : null;
+        return { cacheRecord: browserCacheRecord, isFromMemory: false };
     }
 
     private checkIsExpired(cacheRecord: CacheRecord<DataType>): boolean {
