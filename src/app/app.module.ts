@@ -16,6 +16,8 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import {TabsComponent} from './tabs/tabs.component';
 import {AppTabDirective} from './app-tab.directive';
+import {CACHE_STORE_CONFIG, CacheStore, CacheStoreConfig} from './cache-store';
+import {CacheStoreName} from './cache-store.enum';
 
 @NgModule({
   declarations: [
@@ -35,7 +37,18 @@ import {AppTabDirective} from './app-tab.directive';
     routing,
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production })
   ],
-  providers: [LocationService, WeatherService],
+  providers: [
+      LocationService,
+      WeatherService,
+      CacheStore,
+    {
+      provide: CACHE_STORE_CONFIG,
+      useValue: {
+        cacheKeyPrefix: CacheStoreName.GLOBAL,
+        cacheDurationSeconds: environment.globalCacheDurationSeconds
+      } as CacheStoreConfig
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

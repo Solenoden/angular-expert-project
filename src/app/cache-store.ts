@@ -1,17 +1,28 @@
 import {from, Observable} from 'rxjs';
 import {tap} from 'rxjs/operators';
+import {Inject, Injectable, InjectionToken} from '@angular/core';
 
 type CacheRecord<DataType> = { data: DataType, createdAtEpoch: number };
 export type Cache<DataType> = { [key: string]: CacheRecord<DataType> };
 
-// TODO: Possibly provide through dependency injection
+export type CacheStoreConfig = { cacheKeyPrefix: string; cacheDurationSeconds?: number };
+export const CACHE_STORE_CONFIG = new InjectionToken<CacheStoreConfig>('CacheStore.Config');
+
+@Injectable()
 export class CacheStore<DataType = any> {
-    private readonly inMemoryCache: Cache<DataType> = {};
+    protected readonly inMemoryCache: Cache<DataType> = {};
 
     constructor(
-        private cacheKeyPrefix: string,
-        private cacheDurationSeconds: number
+        @Inject(CACHE_STORE_CONFIG) private config: CacheStoreConfig
     ) {}
+
+    // Creates a child store, based on the parent's config
+    public partitionStore<NewDataType extends DataType>(partitionConfig: CacheStoreConfig): CacheStore<NewDataType> {
+        return new CacheStore<NewDataType>({
+            cacheKeyPrefix: this.getCacheKey(partitionConfig.cacheKeyPrefix),
+            cacheDurationSeconds: partitionConfig.cacheDurationSeconds ?? this.config.cacheDurationSeconds
+        });
+    }
 
     public get<OverrideDataType extends DataType>(key: string): OverrideDataType {
         const cacheKey = this.getCacheKey(key);
@@ -65,10 +76,11 @@ export class CacheStore<DataType = any> {
 
     private checkIsExpired(cacheRecord: CacheRecord<DataType>): boolean {
         const secondsSinceCreation = Math.floor((Date.now() - cacheRecord.createdAtEpoch) / 1000);
-        return secondsSinceCreation >= this.cacheDurationSeconds;
+        return secondsSinceCreation >= this.config.cacheDurationSeconds;
     }
 
     private getCacheKey(key: string): string {
-        return (this.cacheKeyPrefix + '_' + key).toUpperCase();
+        const cacheKey = this.config.cacheKeyPrefix ? this.config.cacheKeyPrefix + '_' + key : key;
+        return cacheKey.toUpperCase();
     }
 }
