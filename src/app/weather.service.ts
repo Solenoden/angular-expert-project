@@ -1,10 +1,9 @@
-import {effect, Injectable, Signal, signal} from '@angular/core';
+import {Injectable, Signal, signal} from '@angular/core';
 import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {CurrentConditions} from './current-conditions/current-conditions.type';
 import {ConditionsAndZip} from './conditions-and-zip.type';
 import {Forecast} from './forecasts-list/forecast.type';
-import {LocationService} from './location.service';
 import {CacheStore} from './cache-store';
 
 @Injectable()
@@ -18,14 +17,9 @@ export class WeatherService {
   private currentConditionsCacheStore = new CacheStore<CurrentConditions>('CONDITIONS', 30);
   private forecastCacheStore = new CacheStore<Forecast>('FORECASTS', 30);
 
-  constructor(
-      private http: HttpClient,
-      private locationService: LocationService
-  ) {
-    this.autoRetrieveLocationConditions();
-  }
+  constructor(private http: HttpClient) {}
 
-  private addCurrentConditions(zipcode: string): void {
+  public addCurrentConditions(zipcode: string): void {
     this.currentConditionsCacheStore.getOrProvide(
         zipcode,
         this.http.get<CurrentConditions>(`${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`)
@@ -34,7 +28,7 @@ export class WeatherService {
     });
   }
 
-  private removeCurrentConditions(zipcode: string) {
+  public removeCurrentConditions(zipcode: string) {
     this.currentConditions.update(conditions => {
       return [...conditions].filter(x => x.zip !== zipcode);
     })
@@ -66,18 +60,5 @@ export class WeatherService {
       return WeatherService.ICON_URL + "art_fog.png";
     else
       return WeatherService.ICON_URL + "art_clear.png";
-  }
-
-  // TODO: Possibly move to appropriate high up component to decouple LocationService from WeatherService
-  private autoRetrieveLocationConditions(): void {
-    effect(() => {
-      const locationsAdded = this.locationService.locationsAdded();
-      locationsAdded?.forEach(zipcode => this.addCurrentConditions(zipcode));
-    }, { allowSignalWrites: true });
-
-    effect(() => {
-      const locationsRemoved = this.locationService.locationsRemoved();
-      locationsRemoved?.forEach(zipcode => this.removeCurrentConditions(zipcode));
-    }, { allowSignalWrites: true });
   }
 }
