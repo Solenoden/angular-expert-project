@@ -51,7 +51,7 @@ export class TabsComponent implements AfterContentInit, OnDestroy {
       this.tabsRemoved.set([]);
 
       if (this.activeTabId() === null || this.activeTabId() === undefined) {
-        this.activeTabId.set(this.tabs()[0]?.tabId);
+        this.viewTab(this.tabs()[0]?.tabId);
       }
     });
   }
