@@ -25,7 +25,7 @@ export class TabsComponent implements AfterContentInit, OnDestroy {
 
   private activeTabId = signal<TabId>(null);
   protected activeTabTemplate = computed<TemplateRef<any>>(
-      () => this.tabs()?.find(x => x.tabId === this.activeTabId())?.templateRef
+      () => this.tabsToDisplay()?.find(x => x.tabId === this.activeTabId())?.templateRef
   );
 
   private tabs = signal<AppTabDirective[]>([]);
