@@ -5,7 +5,7 @@ export class AppTabDirective {
     @Input() tabId: TabId;
     @Input() tabTitle: string;
 
-    constructor(public templateRef: TemplateRef<any>) {}
+    constructor(public templateRef: TemplateRef<unknown>) {}
 }
 
 export type TabId = string | number;

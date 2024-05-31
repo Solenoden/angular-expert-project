@@ -9,7 +9,7 @@ export type CacheStoreConfig = { cacheKeyPrefix: string; cacheDurationSeconds?: 
 export const CACHE_STORE_CONFIG = new InjectionToken<CacheStoreConfig>('CacheStore.Config');
 
 @Injectable()
-export class CacheStore<DataType = any> {
+export class CacheStore<DataType = unknown> {
     protected readonly inMemoryCache: Cache<DataType> = {};
 
     constructor(

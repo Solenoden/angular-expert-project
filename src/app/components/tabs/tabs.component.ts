@@ -24,7 +24,7 @@ export class TabsComponent implements AfterContentInit, OnDestroy {
   @Output() tabRemoved: EventEmitter<TabId> = new EventEmitter();
 
   private activeTabId = signal<TabId>(null);
-  protected activeTabTemplate = computed<TemplateRef<any>>(
+  protected activeTabTemplate = computed<TemplateRef<unknown>>(
       () => this.tabsToDisplay()?.find(x => x.tabId === this.activeTabId())?.templateRef
   );
 
