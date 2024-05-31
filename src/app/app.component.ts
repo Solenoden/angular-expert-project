@@ -1,6 +1,6 @@
 import {Component, effect, Injector, OnInit} from '@angular/core';
-import {LocationService} from './location.service';
-import {WeatherService} from './weather.service';
+import {LocationService} from './services/location.service';
+import {WeatherService} from './services/weather.service';
 
 @Component({
   selector: 'app-root',

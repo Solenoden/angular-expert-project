@@ -1,23 +1,22 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
 import { AppComponent } from './app.component';
-import { ZipcodeEntryComponent } from './zipcode-entry/zipcode-entry.component';
-import {LocationService} from "./location.service";
-import { ForecastsListComponent } from './forecasts-list/forecasts-list.component';
-import {WeatherService} from "./weather.service";
-import { CurrentConditionsComponent } from './current-conditions/current-conditions.component';
-import { MainPageComponent } from './main-page/main-page.component';
+import {LocationService} from "./services/location.service";
+import {WeatherService} from "./services/weather.service";
 import {RouterModule} from "@angular/router";
 import {routing} from "./app.routing";
 import {HttpClientModule} from "@angular/common/http";
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
-import {TabsComponent} from './tabs/tabs.component';
-import {AppTabDirective} from './app-tab.directive';
-import {CACHE_STORE_CONFIG, CacheStore, CacheStoreConfig} from './cache-store';
-import {CacheStoreName} from './cache-store.enum';
+import {AppTabDirective} from './directives/app-tab.directive';
+import {CACHE_STORE_CONFIG, CacheStore, CacheStoreConfig} from './services/cache-store';
+import {CacheStoreName} from './enums/cache-store.enum';
+import {ForecastsListComponent} from './components/forecasts-list/forecasts-list.component';
+import {ZipcodeEntryComponent} from './components/zipcode-entry/zipcode-entry.component';
+import {CurrentConditionsComponent} from './components/current-conditions/current-conditions.component';
+import {MainPageComponent} from './components/main-page/main-page.component';
+import {TabsComponent} from './components/tabs/tabs.component';
 
 @NgModule({
   declarations: [

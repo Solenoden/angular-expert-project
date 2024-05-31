@@ -11,7 +11,7 @@ import {
   TemplateRef
 } from '@angular/core';
 import {from, merge, Subscription} from 'rxjs';
-import {AppTabDirective, TabId} from '../app-tab.directive';
+import {AppTabDirective, TabId} from '../../directives/app-tab.directive';
 
 @Component({
   selector: 'app-tabs',

@@ -1,11 +1,11 @@
 import {Injectable, Signal, signal} from '@angular/core';
 import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
-import {CurrentConditions} from './current-conditions/current-conditions.type';
-import {ConditionsAndZip} from './conditions-and-zip.type';
-import {Forecast} from './forecasts-list/forecast.type';
+import {ConditionsAndZip} from '../conditions-and-zip.type';
 import {CacheStore} from './cache-store';
-import {CacheStoreName} from './cache-store.enum';
+import {CacheStoreName} from '../enums/cache-store.enum';
+import {CurrentConditions} from '../components/current-conditions/current-conditions.type';
+import {Forecast} from '../components/forecasts-list/forecast.type';
 
 @Injectable()
 export class WeatherService {
